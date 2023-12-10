@@ -6,22 +6,26 @@
 // Structure to represent a move
 struct Move {
     char player;
-    int position;
+    int row;
+    int col;
     int round;
     struct Move* next;
 };
 
-// ****************** FUNCTIONS ********************************************* //  
+// ****************** FUNCTIONS ********************************************* //
 
+// Function to display the board
+void displayBoard(char board[4][4]) {
+    printf("    1   2   3   4 \n");
+    printf("  |---|---|---|---|\n");
 
-// Function to add a move to the linked list
-void addMove(struct Move** head, char player, int position, int round) {
-    struct Move* newMove = (struct Move*)malloc(sizeof(struct Move));
-    newMove->player = player;
-    newMove->position = position;
-    newMove->round = round;
-    newMove->next = *head;
-    *head = newMove;
+    for (int i = 0; i < 4; i++) {
+        printf("%d |", i + 1);
+        for (int j = 0; j < 4; j++) {
+            printf(" %c |", board[i][j]);
+        }
+        printf("\n  |---|---|---|---|\n");
+    }
 }
 
 // Function to check for game end conditions
@@ -52,13 +56,23 @@ int endConditions(const char board[4][4], char player) {
     return -1; // It's a tie
 }
 
+// Function to add a move to the linked list
+void addMove(struct Move** head, char player, int row, int col, int round) {
+    struct Move* newMove = (struct Move*)malloc(sizeof(struct Move));
+    newMove->player = player;
+    newMove->row = row;
+    newMove->col = col;
+    newMove->round = round;
+    newMove->next = *head;
+    *head = newMove;
+}
 
 // Function to display the move sheet
 void displayMoveSheet(struct Move* head) {
     printf("~ STATS ~\n\n");
 
     while (head != NULL) {
-        printf("Player %c moved to position %d in round %d\n", head->player, head->position, head->round);
+        printf("Player %c moved to row %d, column %d in round %d\n", head->player, head->row, head->col, head->round);
         head = head->next;
     }
 }
@@ -87,31 +101,23 @@ int main() {
 
     // Game loop
     int round = 1;
+
     while (1) {
         // Display the current board
-        printf("Round %d\n", round);
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                printf("| %c ", board[i][j]);
-            }
-            printf("|\n");
-        }
-        printf("\n");
-        
-        
+        displayBoard(board);
+
         // Get move from the user
         char player = (round % 2 == 1) ? 'X' : 'O';
-        int position;
-        printf("Player %c, enter your move (1-16): ", player);
-        scanf("%d", &position);
+        int row, col; 
+        printf("Player %c, enter your move:\n", player);
+        printf("Row: "); 
+        scanf("%d", &row); 
+        printf("Column: "); 
+        scanf("%d", &col);
 
-        // Update the board and move list
-        int row = (position - 1) / 4;
-        int col = (position - 1) % 4;
-
-        if (board[row][col] == ' ') {
-            board[row][col] = player;
-            addMove(&moveList, player, position, round);
+        if (row >= 1 && row <= 4 && col >= 1 && col <= 4 && board[row-1][col-1] == ' ') {
+            board[row-1][col-1] = player;
+            addMove(&moveList, player, row, col, round);
             round++;
         } else {
             printf("Invalid move. Try again.\n");
@@ -130,11 +136,7 @@ int main() {
             freeMoves(moveList);
             return 0;
         }
-
     }
 
     return 0;
 }
-
-
-    
