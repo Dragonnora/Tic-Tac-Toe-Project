@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// ****************** STRUCTURES ********************************************* // 
+
+// ****************** ENUMERATION & STRUCTURE ********************************* // 
 
 // Enumeration for players
 enum Player {
     PLAYER_X = 'X',
     PLAYER_O = 'O',
-    NO_PLAYER = ' ' // Use this for empty spaces on the board
+    NO_PLAYER = ' ' // For empty spaces on the board
 };
 
 // Structure to represent a move
@@ -19,11 +20,131 @@ struct Move {
     struct Move* next;
 };
 
-// ****************** FUNCTIONS ********************************************* //
+// ********************* PROTOTYPES ****************************************** //
+
+// Prototypes
+void drawBoard(char [4][4]);
+int endConditions(const char [4][4], enum Player);
+void addMove(struct Move**, enum Player, int, int, int);
+void displayMoveSheet(struct Move*);
+void freeMoves(struct Move*);
 
 
-// Function to display the board
-void displayBoard(char board[4][4]) {
+// ********************* MAIN FUNCTION ************************************** //
+
+int main() {
+    // Makes the output blue!
+    system("COLOR 9A");
+    
+    char playAgain = 'y';
+    
+     // Game loop 
+    do{ 
+    
+    int round = 1;
+    struct Move* moveList = NULL;
+
+    // Initializes the board
+    char board[4][4] = { { ' ', ' ', ' ', ' ' },
+                        { ' ', ' ', ' ', ' ' },
+                        { ' ', ' ', ' ', ' ' },
+                        { ' ', ' ', ' ', ' ' } };
+     
+        
+        while (1) {
+            // Displays the current board
+            drawBoard(board);
+    
+            // Gets move from the user
+            enum Player player = (round % 2 == 1) ? PLAYER_X : PLAYER_O;
+            int row, col;
+            int condition = 0;
+            printf("Player %c, enter your move:\n", (player == PLAYER_X) ? 'X' : 'O');
+    
+            // ********* INPUT VALIDATION ********* //
+            
+            // Input validation for the row
+            do {
+                // Gets input from the user
+                printf("Row (1-4): ");
+    
+                // Checks if the input is an integer
+                if (scanf("%d", &row) == 1 && row >= 1 && row <= 4) {
+                    condition = 1; // Input is valid, exit the loop
+                } else {
+                    printf("Invalid input. Enter an integer between 1 and 4.\n");
+    
+                    // Clears input buffer
+                    while (getchar() != '\n');
+    
+                    // Set condition to 0 to continue the loop
+                    condition = 0;
+                }
+    
+            } while (condition == 0);
+    
+            // Input validation for the column
+            do {
+                // Gets input from the user
+                printf("Column (1-4): ");
+    
+                // Checks if the input is an integer
+                if (scanf("%d", &col) == 1 && col >= 1 && col <= 4) {
+                    condition = 1; // Input is valid, exit the loop
+                } else {
+                    printf("Invalid input. Enter an integer between 1 and 4.\n");
+    
+                    // Clears input buffer
+                    while (getchar() != '\n');
+    
+                    // Sets condition to 0 to continue the loop
+                    condition = 0;
+                }
+    
+            } while (condition == 0);
+            
+            // ******************************* // 
+    
+            // Verifies if the spot is already marked
+            if (row >= 1 && row <= 4 && col >= 1 && col <= 4 && board[row - 1][col - 1] == ' ') {
+                board[row - 1][col - 1] = (char)player;
+                addMove(&moveList, player, row, col, round);
+                round++;
+            } else {
+                printf("Invalid move. Try again.\n");
+            }
+    
+            // Checks for game end conditions
+            int outcome = endConditions(board, player);
+            if (outcome == 1) {
+                printf("\n\nPlayer %c WINS!\n\n\n", (player == PLAYER_X) ? 'X' : 'O');
+                displayMoveSheet(moveList);
+                freeMoves(moveList);
+                break;
+                
+            } else if (outcome == -1) {
+                printf("\n\nIt's a TIE!\n");
+                displayMoveSheet(moveList);
+                freeMoves(moveList);
+                break; 
+            }
+        }
+        
+        printf("\n\nPlay again? (y/n): ");
+        scanf(" %c", &playAgain);
+        getchar(); // Consume the newline character
+        
+    } while (playAgain == 'y' || playAgain == 'Y'); 
+    
+        
+    return 0;
+}
+
+// ****************** OTHER FUNCTIONS ***************************************** //
+
+
+// Function to draw the board
+void drawBoard(char board[4][4]) {
     printf("\n\n");
     printf("    1   2   3   4 \n");
     printf("  |---|---|---|---|\n");
@@ -80,14 +201,43 @@ void addMove(struct Move** head, enum Player player, int row, int col, int round
     *head = newMove;
 }
 
-// Function to display the move sheet
+// Function to display the move sheet 
 void displayMoveSheet(struct Move* head) {
-    printf("~ STATS ~\n\n");
+    printf("~ MOVE SHEET ~\n\n");
 
-    while (head != NULL) {
-        printf("Player %c moved to row %d, column %d in round %d\n", (head->player == PLAYER_X) ? 'X' : 'O', head->row, head->col, head->round);
-        head = head->next;
+    int count = 0;
+    struct Move* temp = head;
+
+    // Count the number of moves
+    while (temp != NULL) {
+        count++;
+        temp = temp->next;
     }
+
+    // Create an array to store moves
+    struct Move** movesArray = malloc(count * sizeof(struct Move*));
+    if (movesArray == NULL) {
+        printf("Memory allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy moves to the array
+    int i = 0;
+    while (head != NULL) {
+        movesArray[i] = head;
+        head = head->next;
+        i++;
+    }
+
+    // Print moves in reverse order
+    for (int j = i - 1; j >= 0; j--) {
+        printf("Player %c moved to row %d, column %d in round %d\n", 
+            (movesArray[j]->player == PLAYER_X) ? 'X' : 'O', 
+            movesArray[j]->row, movesArray[j]->col, movesArray[j]->round);
+    }
+
+    // Free the array
+    free(movesArray);
 }
 
 // Function to free the allocated memory for the move list
@@ -97,100 +247,4 @@ void freeMoves(struct Move* head) {
         head = head->next;
         free(temp);
     }
-}
-
-// ********************* MAIN FUNCTION ************************************** //
-
-int main() {
-    
-    int round = 1;
-    struct Move* moveList = NULL;
-
-    // Initializes the board
-    char board[4][4] = { { ' ', ' ', ' ', ' ' },
-                        { ' ', ' ', ' ', ' ' },
-                        { ' ', ' ', ' ', ' ' },
-                        { ' ', ' ', ' ', ' ' } };
-
-    // Game loop
-    while (1) {
-        // Displays the current board
-        displayBoard(board);
-
-        // Gets move from the user
-        enum Player player = (round % 2 == 1) ? PLAYER_X : PLAYER_O;
-        int row, col;
-        int condition = 0;
-        printf("Player %c, enter your move:\n", (player == PLAYER_X) ? 'X' : 'O');
-
-    // ********* INPUT VALIDATION ********* //
-        
-        // Input validation for the row
-        do {
-            // Gets input from the user
-            printf("Row (1-4): ");
-
-            // Checks if the input is an integer
-            if (scanf("%d", &row) == 1 && row >= 1 && row <= 4) {
-                condition = 1; // Input is valid, exit the loop
-            } else {
-                printf("Invalid input. Enter an integer between 1 and 4.\n");
-
-                // Clears input buffer
-                while (getchar() != '\n');
-
-                // Set condition to 0 to continue the loop
-                condition = 0;
-            }
-
-        } while (condition == 0);
-
-        // Input validation for the column
-        do {
-            // Gets input from the user
-            printf("Column (1-4): ");
-
-            // Checks if the input is an integer
-            if (scanf("%d", &col) == 1 && col >= 1 && col <= 4) {
-                condition = 1; // Input is valid, exit the loop
-            } else {
-                printf("Invalid input. Enter an integer between 1 and 4.\n");
-
-                // Clears input buffer
-                while (getchar() != '\n');
-
-                // Sets condition to 0 to continue the loop
-                condition = 0;
-            }
-
-        } while (condition == 0);
-        
-        
-    // ******************************* // 
-        
-        // Verifies if the spot is already marked
-        if (row >= 1 && row <= 4 && col >= 1 && col <= 4 && board[row - 1][col - 1] == ' ') {
-            board[row - 1][col - 1] = (char)player;
-            addMove(&moveList, player, row, col, round);
-            round++;
-        } else {
-            printf("Invalid move. Try again.\n");
-        }
-
-        // Checks for game end conditions
-        int outcome = endConditions(board, player);
-        if (outcome == 1) {
-            printf("Player %c WINS!\n", (player == PLAYER_X) ? 'X' : 'O');
-            displayMoveSheet(moveList);
-            freeMoves(moveList);
-            return 0;
-        } else if (outcome == -1) {
-            printf("It's a TIE!\n");
-            displayMoveSheet(moveList);
-            freeMoves(moveList);
-            return 0;
-        }
-    }
-
-    return 0;
 }
