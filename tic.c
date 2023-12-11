@@ -120,13 +120,13 @@ int main() {
             // Checks for game outcomes
             int outcome = gameOutcomes(board, player);
             if (outcome == 1) {
-                printf("\n\nPlayer %c WINS!\n\n\n", (player == PLAYER_X) ? 'X' : 'O');
+                printf("\n\nPlayer %c wins!\n\n\n", (player == PLAYER_X) ? 'X' : 'O');
                 displayMoveSheet(moveList);
                 freeMoves(moveList);
                 break;
                 
             } else if (outcome == -1) {
-                printf("\n\nIt's a TIE!\n");
+                printf("\n\nNo one wins!\n");
                 displayMoveSheet(moveList);
                 freeMoves(moveList);
                 break; 
