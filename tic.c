@@ -24,7 +24,10 @@ struct Move {
 
 // Prototypes
 void drawBoard(char [4][4]);
-int endConditions(const char [4][4], enum Player);
+int gameOutcomes(const char [4][4], enum Player);
+int rowOutcomes(const char [4][4], enum Player);
+int colOutcomes(const char [4][4], enum Player);
+int diagOutcomes(const char [4][4], enum Player);
 void addMove(struct Move**, enum Player, int, int, int);
 void displayMoveSheet(struct Move*);
 void freeMoves(struct Move*);
@@ -52,7 +55,7 @@ int main() {
      
         
         while (1) {
-            // Displays the current board
+            // draws the current board
             drawBoard(board);
     
             // Gets move from the user
@@ -114,8 +117,8 @@ int main() {
                 printf("Invalid move. Try again.\n");
             }
     
-            // Checks for game end conditions
-            int outcome = endConditions(board, player);
+            // Checks for game outcomes
+            int outcome = gameOutcomes(board, player);
             if (outcome == 1) {
                 printf("\n\nPlayer %c WINS!\n\n\n", (player == PLAYER_X) ? 'X' : 'O');
                 displayMoveSheet(moveList);
@@ -158,27 +161,13 @@ void drawBoard(char board[4][4]) {
     }
 }
 
-// Function to check for game end conditions
-int endConditions(const char board[4][4], enum Player player) {
-    // Checks rows and columns for a win
-    for (int i = 0; i < 4; i++) {
-        if ((board[i][0] == (char)player && board[i][1] == (char)player &&
-             board[i][2] == (char)player && board[i][3] == (char)player) ||
-            (board[0][i] == (char)player && board[1][i] == (char)player &&
-             board[2][i] == (char)player && board[3][i] == (char)player)) {
-            return 1; // Win in row or column
-        }
+// Function that checks game outcomes
+int gameOutcomes(const char board[4][4], enum Player player) {
+    if (rowOutcomes(board, player) || colOutcomes(board, player) || diagOutcomes(board, player)) {
+        return 1; // Win
     }
 
-    // Checks diagonals for a win
-    if ((board[0][0] == (char)player && board[1][1] == (char)player &&
-         board[2][2] == (char)player && board[3][3] == (char)player) ||
-        (board[0][3] == (char)player && board[1][2] == (char)player &&
-         board[2][1] == (char)player && board[3][0] == (char)player)) {
-        return 1; // Win in diagonals
-    }
-
-    // Checks for a tie
+    // Check for a tie
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             if (board[i][j] == ' ') {
@@ -189,6 +178,40 @@ int endConditions(const char board[4][4], enum Player player) {
 
     return -1; // It's a tie
 }
+
+// Function to see if rows have a winning outcome
+int rowOutcomes(const char board[4][4], enum Player player) {
+    for (int i = 0; i < 4; i++) {
+        if (board[i][0] == (char)player && board[i][1] == (char)player &&
+            board[i][2] == (char)player && board[i][3] == (char)player) {
+            return 1; // Win in row
+        }
+    }
+    return 0;
+}
+
+// Function to see if columns have a winning outcome 
+int colOutcomes(const char board[4][4], enum Player player) {
+    for (int i = 0; i < 4; i++) {
+        if (board[0][i] == (char)player && board[1][i] == (char)player &&
+            board[2][i] == (char)player && board[3][i] == (char)player) {
+            return 1; // Win in column
+        }
+    }
+    return 0;
+}
+
+// Function to see if diagonals have a winning outcome
+int diagOutcomes(const char board[4][4], enum Player player) {
+    if ((board[0][0] == (char)player && board[1][1] == (char)player &&
+         board[2][2] == (char)player && board[3][3] == (char)player) ||
+        (board[0][3] == (char)player && board[1][2] == (char)player &&
+         board[2][1] == (char)player && board[3][0] == (char)player)) {
+        return 1; // Win in diagonals
+    }
+    return 0;
+}
+
 
 // Function to add a move to the linked list
 void addMove(struct Move** head, enum Player player, int row, int col, int round) {
